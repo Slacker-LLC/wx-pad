@@ -1,0 +1,7 @@
+# 统一按 LF 存储、按 LF 检出。
+# 本项目的构建脚本是 shell 脚本（build.sh），若检出成 CRLF，
+# bash 会把它当成 "\r: command not found" 而无法运行。
+* text=auto eol=lf
+
+# 图标位图是二进制，禁止任何换行符转换
+*.webp binary

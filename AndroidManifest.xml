@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sky.ant.min"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="36" />
+
+    <!--
+        无 Activity、无权限、无任何三方依赖。
+        图标沿用原版「飞鱼」：API 26+ 走自适应图标（白底 + 飞鱼矢量前景），
+        API 24/25 回退到 5 档密度的 webp 位图。素材来源见 NOTICE.md。
+    -->
+    <application
+        android:label="飞鱼极简版"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="微信平板模式（自动适配版）" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+
+        <!--
+            推荐作用域：模块被启用时，框架自动把微信勾上，省掉手动勾选那一步。
+            多个包名用 ; 分隔（android 表示系统框架），本模块只需要微信。
+            框架仍把完整应用列表显示出来供用户增删，模块无权过滤那个列表。
+        -->
+        <meta-data
+            android:name="xposedscope"
+            android:value="com.tencent.mm" />
+
+    </application>
+
+</manifest>

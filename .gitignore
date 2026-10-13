@@ -1,0 +1,18 @@
+# 构建产物
+build/
+verify/build/
+*.apk
+*.idsig
+*.dex
+*.class
+
+# 分析素材：第三方版权作品（微信 APK、原版飞鱼 APK、反编译产物），
+# 仅本地留存，不入库、不随项目分发。详见 _work/README.md
+_work/
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
