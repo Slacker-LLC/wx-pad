@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    自适应图标（API 26+）：白底 + 飞鱼前景。
-    结构与原版「飞鱼」的 res/BW.xml 一致，含 monochrome（主题图标用）。
+    自适应图标（API 26+）：白底 + WX PAD 字标前景。
+    含 monochrome（主题图标用）。蒙版形状由启动器决定。
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />

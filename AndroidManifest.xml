@@ -10,8 +10,8 @@
 
     <!--
         无 Activity、无权限、无任何三方依赖。
-        图标沿用原版「飞鱼」：API 26+ 走自适应图标（白底 + 飞鱼矢量前景），
-        API 24/25 回退到 5 档密度的 webp 位图。素材来源见 NOTICE.md。
+        图标：API 26+ 走自适应图标（白底 + WX PAD 矢量前景），
+        API 24/25 回退到 5 档密度的 webp 位图。源文件在 art/ 目录。
     -->
     <application
         android:label="@string/app_name"

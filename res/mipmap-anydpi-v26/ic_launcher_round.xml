@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     圆形自适应图标（API 26+）。
-    原版「飞鱼」的 res/0K.xml 与本模块的 ic_launcher.xml 内容完全相同，
-    这里保持一致：白底 + 飞鱼前景 + 同款 monochrome。
+    与 ic_launcher.xml 内容相同：白底 + WX PAD 字标前景 + 同款 monochrome。
+    是否显示为圆形由启动器的蒙版决定，两个文件内容一致即可。
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />

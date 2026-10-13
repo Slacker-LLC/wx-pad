@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 原版自适应图标用的背景色：纯白 -->
+    <!-- 自适应图标背景：纯白，字标画在白底上 -->
     <color name="ic_launcher_background">#ffffffff</color>
 </resources>
