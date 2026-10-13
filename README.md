@@ -10,7 +10,7 @@
 - 包名：`com.sky.ant.min`
 - 产物：`build/fy-min.apk`（约 54 KB，其中约 33 KB 是图标；原版 1.46 MB）
 - 依赖：**零**（无 androidx、无 Kotlin，整个 APK 只有一个 dex）
-- 许可：MIT（图标素材除外，见 [NOTICE.md](NOTICE.md)）
+- 许可：Apache-2.0（图标素材除外，见 [NOTICE.md](NOTICE.md)）
 
 > ⚠️ **使用前请先读[免责声明](DISCLAIMER.md)**：本模块 Hook 修改微信客户端行为，
 > 存在账号风控风险，后果自负。
@@ -266,7 +266,11 @@ fy-min: ready in 1381ms
 
 ## 八、许可证与第三方素材
 
-本项目以 **MIT 许可证**发布，全文见 [LICENSE](LICENSE)，版权归 `Slacker-LLC` 所有。
+本项目以 **Apache License 2.0** 发布，全文见 [LICENSE](LICENSE)，版权归 `Slacker-LLC` 所有。
+
+Apache-2.0 是宽松型许可证，允许商用、修改、再分发，也允许闭源衍生，条件只有三条：
+保留版权与许可声明、标明改过的文件、再分发时保留 [NOTICE.md](NOTICE.md) 里的署名信息。
+相比 MIT，它多给了一条**明确的专利授权**（第 3 条），对被许可方更有保障。
 
 **使用前请阅读 [DISCLAIMER.md](DISCLAIMER.md)**（免责声明），要点：
 
@@ -282,7 +286,7 @@ fy-min: ready in 1381ms
 - API 26+ 走自适应图标（`res/mipmap-anydpi-v26/`）：白色背景 + 飞鱼矢量前景 + 同款 monochrome；
 - API 24/25 回退到 5 档密度的 webp 位图兜底。
 
-**这些图形的著作权属于原作者，不在本项目的 MIT 许可覆盖范围内。**
+**这些图形的著作权属于原作者，不在本项目的 Apache-2.0 许可覆盖范围内。**
 完整的来源对照表与再分发注意事项见 [NOTICE.md](NOTICE.md)；
 替换图标只需改 `res/` 下的文件，不需要动任何 Java 代码。
 
@@ -306,7 +310,7 @@ res/                         应用图标（复用原版飞鱼素材，见 NOTIC
     values/colors.xml                         图标背景色
 verify/                      桌面验证工具（不进 APK）
 build/                       构建产物：fy-min.apk
-LICENSE                      MIT 许可证
+LICENSE                      Apache License 2.0 全文
 NOTICE.md                    第三方素材来源声明（图标、Xposed API 桩）
 DISCLAIMER.md                免责声明
 ```
