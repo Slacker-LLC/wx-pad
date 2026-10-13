@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">微信平板模式（极简版）</string>
+    <string name="module_description">让微信把本机识别为 Lenovo TB-9707F 平板，使同一微信号可在手机与平板同时在线。</string>
+</resources>

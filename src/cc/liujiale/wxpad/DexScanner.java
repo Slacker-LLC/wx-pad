@@ -1,4 +1,4 @@
-package com.sky.ant.min;
+package cc.liujiale.wxpad;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -9,8 +9,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import de.robv.android.xposed.XposedBridge;
 
 /**
  * 迷你 DEX 扫描器：不依赖任何三方库，靠「字符串锚点」定位 hook 目标。
@@ -32,7 +30,29 @@ import de.robv.android.xposed.XposedBridge;
  */
 final class DexScanner {
 
-    private static final String TAG = "fy-min: ";
+    private static final String TAG = "scan: ";
+
+    /**
+     * 日志出口。libxposed 的 log() 是 {@link Main} 的实例方法，本类是静态工具，
+     * 拿不到那个实例，所以由 Main 在挂 hook 前把自己的 logi() 装进来。
+     * 没装（例如脱离框架直接跑扫描）就静默丢弃，不影响扫描本身。
+     */
+    interface Logger {
+        void log(String msg);
+    }
+
+    private static volatile Logger sLogger;
+
+    static void setLogger(Logger l) {
+        sLogger = l;
+    }
+
+    private static void log(String msg) {
+        Logger l = sLogger;
+        if (l != null) {
+            l.log(TAG + msg);
+        }
+    }
 
     /**
      * 全部锚点。约定：完整的字面量排在同组的子串形式前面 —— 整串相等比对更快，
@@ -99,7 +119,7 @@ final class DexScanner {
                     probe(dex, map, idx, ORDER_CGI, cgi);
                 }
             } catch (Throwable t) {
-                XposedBridge.log(TAG + "open " + path + " failed: " + t);
+                log("open " + path + " failed: " + t);
             } finally {
                 if (zf != null) {
                     try {
@@ -183,7 +203,7 @@ final class DexScanner {
                 }
             }
         } catch (Throwable t) {
-            XposedBridge.log(TAG + "scan sites failed: " + t);
+            log("scan sites failed: " + t);
         }
         return out;
     }
@@ -604,7 +624,7 @@ final class DexScanner {
             }
             return bos.toByteArray();
         } catch (Throwable t) {
-            XposedBridge.log(TAG + "read " + e.getName() + " failed: " + t);
+            log("read " + e.getName() + " failed: " + t);
             return null;
         } finally {
             if (in != null) {

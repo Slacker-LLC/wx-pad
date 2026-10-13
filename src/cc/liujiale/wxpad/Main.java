@@ -1,6 +1,7 @@
-package com.sky.ant.min;
+package cc.liujiale.wxpad;
 
 import android.content.pm.ApplicationInfo;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,55 +14,79 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import io.github.libxposed.api.XposedModule;
 
 /**
- * 飞鱼极简版：让微信以为自己在联想平板上运行。
+ * 微信平板模式（极简版）：让微信以为自己在联想平板上运行。
  *
  * 一共只做两件事：
  *   1. 本地：把「当前设备是 Lenovo TB-9707F 平板」的判定改成 true；
  *   2. 联网：微信向服务器校验「能否以平板身份登录」时，把应答改成 true。
+ *
+ * 走 libxposed API 102（io.github.libxposed.api），不是旧的 de.robv.android.xposed。
+ * 入口类由 META-INF/xposed/java_init.list 声明，作用域由 META-INF/xposed/scope.list 声明。
  *
  * 与原版「飞鱼」的区别：
  *   - 不硬编码任何类名/方法名，靠语义字符串锚点在 dex 里现场定位，微信升级自动适配；
  *   - 没有设置界面、没有网络图床、没有作者署名、没有多余 hook；
  *   - 没有任何三方依赖（无 androidx、无 kotlin），整个 APK 只有一个 dex。
  */
-public class Main implements IXposedHookLoadPackage {
+public class Main extends XposedModule {
 
-    private static final String TAG = "fy-min: ";
+    /** 日志 tag，在框架日志页里按它过滤。 */
+    private static final String TAG = "wxpad";
 
     /** 只处理微信。 */
     private static final String TARGET_PKG = "com.tencent.mm";
 
     /** 扫描结果缓存文件名（放在微信自己的 files 目录下）。 */
-    private static final String CACHE_FILE = "fymin.targets";
-    private static final String CACHE_HEAD = "fy-min v1";
+    private static final String CACHE_FILE = "wxpad.targets";
+    private static final String CACHE_HEAD = "wxpad v1";
 
     /** 微信的热修复目录，直接删掉，避免它把旧 class 覆盖回来。 */
     private static final String[] TINKER_DIRS = { "tinker", "tinker_server", "tinker_temp" };
 
+    /** 日志。 */
+    private void logi(String msg) {
+        log(Log.INFO, TAG, msg);
+    }
+
+    private void logw(String msg) {
+        log(Log.WARN, TAG, msg);
+    }
+
+    private void loge(String msg, Throwable t) {
+        log(Log.ERROR, TAG, msg, t);
+    }
+
+    /**
+     * 包就绪时回调。此刻微信的 classloader 已经建好（{@link PackageReadyParam#getClassLoader()}），
+     * 又还没到 {@code Application.onCreate()}，是挂 hook 的时机。
+     *
+     * 之所以不用更早的 onPackageLoaded：微信带自定义 AppComponentFactory，
+     * 两个 classloader 未必是同一个，而我们要 hook 的类由后者加载。
+     */
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (lpparam == null || !TARGET_PKG.equals(lpparam.packageName)) {
+    public void onPackageReady(PackageReadyParam param) {
+        if (!TARGET_PKG.equals(param.getPackageName())) {
             return;
         }
         try {
-            run(lpparam);
+            run(param);
         } catch (Throwable t) {
-            XposedBridge.log(TAG + "fatal: " + t);
-            XposedBridge.log(t);
+            loge("fatal: " + t, t);
         }
     }
 
-    private void run(XC_LoadPackage.LoadPackageParam lpparam) {
+    private void run(PackageReadyParam param) {
         long t0 = System.currentTimeMillis();
-        ApplicationInfo ai = lpparam.appInfo;
+        ApplicationInfo ai = param.getApplicationInfo();
+        ClassLoader loader = param.getClassLoader();
         long versionCode = versionCodeOf(ai);
-        XposedBridge.log(TAG + "start, wechat versionCode=" + versionCode);
+        logi("start, wechat versionCode=" + versionCode);
+
+        // libxposed 的 log() 是模块实例方法，静态的 DexScanner 拿不到，这里接上
+        DexScanner.setLogger(msg -> logi(msg));
 
         if (ai != null) {
             cleanTinker(ai.dataDir);
@@ -80,20 +105,20 @@ public class Main implements IXposedHookLoadPackage {
         List<Target> targets = null;
 
         if (cache != null) {
-            targets = loadCache(cache, versionCode, apkSize, lpparam.classLoader);
+            targets = loadCache(cache, versionCode, apkSize, loader);
             if (targets != null) {
-                XposedBridge.log(TAG + "cache hit, " + targets.size() + " target(s)");
+                logi("cache hit, " + targets.size() + " target(s)");
             }
         }
         if (targets == null) {
-            XposedBridge.log(TAG + "scanning " + paths.length + " apk(s)...");
+            logi("scanning " + paths.length + " apk(s)...");
             try {
                 targets = DexScanner.scan(paths);
             } catch (Throwable t) {
-                XposedBridge.log(TAG + "scan failed: " + t);
+                loge("scan failed: " + t, t);
                 targets = new ArrayList<Target>();
             }
-            XposedBridge.log(TAG + "scan found " + targets.size() + " target(s)");
+            logi("scan found " + targets.size() + " target(s)");
             if (cache != null) {
                 saveCache(cache, versionCode, apkSize, targets);
             }
@@ -107,7 +132,7 @@ public class Main implements IXposedHookLoadPackage {
             if (t.kind < 0 || t.kind >= Target.KIND_COUNT || hooked[t.kind]) {
                 continue;
             }
-            if (hookOne(lpparam.classLoader, t)) {
+            if (hookOne(loader, t)) {
                 hooked[t.kind] = true;
             }
         }
@@ -116,7 +141,7 @@ public class Main implements IXposedHookLoadPackage {
                 reportMiss(targets, k);
             }
         }
-        XposedBridge.log(TAG + "ready in " + (System.currentTimeMillis() - t0) + "ms");
+        logi("ready in " + (System.currentTimeMillis() - t0) + "ms");
     }
 
     /** 一个目标都没挂上时，把试过的候选全打出来，方便对照 dex 排查。 */
@@ -127,11 +152,11 @@ public class Main implements IXposedHookLoadPackage {
                 n++;
             }
         }
-        XposedBridge.log(TAG + "kind " + kind + " not hooked, " + n + " candidate(s) rejected:");
+        logw("kind " + kind + " not hooked, " + n + " candidate(s) rejected:");
         for (int i = 0; i < targets.size(); i++) {
             Target t = targets.get(i);
             if (t.kind == kind) {
-                XposedBridge.log(TAG + "  - " + t);
+                logw("  - " + t);
             }
         }
     }
@@ -143,41 +168,35 @@ public class Main implements IXposedHookLoadPackage {
         try {
             Method m = resolve(loader, t);
             if (m == null) {
-                XposedBridge.log(TAG + "signature mismatch: " + t);
+                logw("signature mismatch: " + t);
                 return false;
             }
-            XC_MethodHook cb;
+            Hooker hooker;
             if (t.kind == Target.KIND_LOCAL_DEVICE) {
-                // 纯本地计算，没有副作用，直接跳过原逻辑返回 true
-                cb = new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) {
-                        param.setResult(Boolean.TRUE);
-                    }
-                };
+                // 纯本地计算，没有副作用：不往下走，直接判定「是平板」
+                hooker = chain -> Boolean.TRUE;
             } else {
                 // 保留真实网络请求，只把应答改成 true
-                cb = new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        Object r = param.getResult();
-                        // true 不用动；false 是「不是平板」的应答，null 是异常路径，
-                        // 两种都按「校验通过」处理
-                        if (Boolean.TRUE.equals(r)) {
-                            return;
-                        }
-                        if (r instanceof Boolean || r == null) {
-                            param.setResult(Boolean.TRUE);
-                        }
+                hooker = chain -> {
+                    Object r = chain.proceed();
+                    // true 不用动；false 是「不是平板」的应答，null 是异常路径，
+                    // 两种都按「校验通过」处理
+                    if (Boolean.TRUE.equals(r)) {
+                        return r;
                     }
+                    if (r instanceof Boolean || r == null) {
+                        return Boolean.TRUE;
+                    }
+                    return r;
                 };
             }
-            XposedBridge.hookMethod(m, cb);
-            XposedBridge.log(TAG + "hooked [" + (t.kind == Target.KIND_LOCAL_DEVICE ? "local" : "cgi")
-                    + "] " + m);
+            // PROTECTIVE：hooker 自己抛的异常由框架吞掉并记日志，
+            // 不会波及微信。proceed() 抛的异常不受影响，照常往上抛。
+            hook(m).setExceptionMode(ExceptionMode.PROTECTIVE).intercept(hooker);
+            logi("hooked [" + (t.kind == Target.KIND_LOCAL_DEVICE ? "local" : "cgi") + "] " + m);
             return true;
         } catch (Throwable e) {
-            XposedBridge.log(TAG + "hook failed " + t + ": " + e);
+            loge("hook failed " + t + ": " + e, e);
             return false;
         }
     }
@@ -236,10 +255,10 @@ public class Main implements IXposedHookLoadPackage {
             try {
                 if (f.exists() && !f.isFile()) {
                     deleteTree(f);
-                    XposedBridge.log(TAG + "cleaned " + f.getAbsolutePath());
+                    logi("cleaned " + f.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                XposedBridge.log(TAG + "clean " + f + " failed: " + t);
+                loge("clean " + f + " failed: " + t, t);
             }
         }
     }
@@ -312,7 +331,7 @@ public class Main implements IXposedHookLoadPackage {
                     return null;   // 缓存格式不对，重新扫
                 }
                 if (resolve(loader, t) == null) {
-                    XposedBridge.log(TAG + "cached target stale: " + line);
+                    logw("cached target stale: " + line);
                     continue;      // 只丢这一条，同一目标的其他候选还能用
                 }
                 if (!list.contains(t)) {
@@ -323,7 +342,7 @@ public class Main implements IXposedHookLoadPackage {
             // 某个目标一个可用候选都不剩了，缓存整体作废、重扫一遍
             for (int k = 0; k < Target.KIND_COUNT; k++) {
                 if (!present[k]) {
-                    XposedBridge.log(TAG + "cache has no usable kind " + k + ", rescan");
+                    logw("cache has no usable kind " + k + ", rescan");
                     return null;
                 }
             }
@@ -352,7 +371,7 @@ public class Main implements IXposedHookLoadPackage {
             }
             w.flush();
         } catch (Throwable t) {
-            XposedBridge.log(TAG + "cache save failed: " + t);
+            loge("cache save failed: " + t, t);
         } finally {
             if (w != null) {
                 try {

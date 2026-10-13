@@ -1,4 +1,4 @@
-package com.sky.ant.min;
+package cc.liujiale.wxpad;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

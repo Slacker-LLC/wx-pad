@@ -45,14 +45,18 @@
 要替换图标，只需修改上表中 `res/` 下的文件。
 无需修改 Java 代码或构建脚本。
 
-## 二、Xposed API 编译桩
+## 二、libxposed API 编译桩
 
-`api-src/` 下的接口定义依据 Xposed 框架的公开 API 编写。
+`api-src/` 下的接口定义取自 libxposed API 102.0.0 的官方源码
+（Maven 坐标 `io.github.libxposed:api:102.0.0`，来源为 `api-sources.jar`）。
+只做了两处改动：删去 `@RequiresApi` 等注解；把 Java 17 的 `sealed` 与 `record`
+改写成等价的 Java 8 写法，以配合构建脚本的 `-source 8 -target 8`。
+
 这些定义只是**编译期桩**，只用于让 `javac` 编译本模块代码。
 
-- 构建脚本不会把这些桩打包进 APK。脚本只把 `build/classes/com/sky/ant/min` 交给 `d8`，见 [build.sh](build.sh) 第 2 步。因此，整个 `api-src/` 目录不会进入 APK。
+- 构建脚本不会把这些桩打包进 APK。脚本只把 `build/classes/cc/liujiale/wxpad` 交给 `d8`，见 [build.sh](build.sh) 第 2 步。因此，整个 `api-src/` 目录不会进入 APK。
 - 运行时使用框架注入的真实实现。
-- Xposed 框架及其 API 由 rovo89 等开发者以 Apache License 2.0 发布。
+- libxposed API 由 libxposed 项目以 Apache License 2.0 发布。
 
 ## 三、不含第三方运行时依赖
 
@@ -60,5 +64,5 @@
 APK 只包含以下三类内容：
 
 1. `classes.dex` —— 本项目的编译产物。
-2. `AndroidManifest.xml` 和 `assets/xposed_init`。
-3. `res/` 下的图标资源，见第一节。
+2. `AndroidManifest.xml`，以及 `META-INF/xposed/` 下的三份模块声明（`java_init.list`、`module.prop`、`scope.list`）。
+3. `res/` 下的图标资源与字符串资源，见第一节。

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sky.ant.min"
+    package="cc.liujiale.wxpad"
     android:versionCode="1"
     android:versionName="1.0">
 
@@ -14,28 +14,24 @@
         API 24/25 回退到 5 档密度的 webp 位图。素材来源见 NOTICE.md。
     -->
     <application
-        android:label="飞鱼极简版"
+        android:label="@string/app_name"
+        android:description="@string/module_description"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
 
+        <!--
+            模块身份。新版框架（libxposed API 101+）不看这几行：它按
+            META-INF/xposed/* 判定模块与作用域。保留 xposedmodule 是为了让
+            模块仓库与旧版管理器仍能把这个 APK 识别为 Xposed 模块。
+            注意不要写 xposedminversion —— 框架会把它的值直接显示成
+            「Xposed 93」这样的旧 API 标签，而本模块走的是 API 102。
+        -->
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="微信平板模式（自动适配版）" />
-        <meta-data
-            android:name="xposedminversion"
-            android:value="93" />
-
-        <!--
-            推荐作用域：模块被启用时，框架自动把微信勾上，省掉手动勾选那一步。
-            多个包名用 ; 分隔（android 表示系统框架），本模块只需要微信。
-            框架仍把完整应用列表显示出来供用户增删，模块无权过滤那个列表。
-        -->
-        <meta-data
-            android:name="xposedscope"
-            android:value="com.tencent.mm" />
+            android:value="让微信把本机识别为 Lenovo TB-9707F 平板，使同一微信号可在手机与平板同时在线。" />
 
     </application>
 

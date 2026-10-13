@@ -6,9 +6,11 @@
 
 | 项目 | 信息 |
 |---|---|
-| 模块包名 | `com.sky.ant.min` |
-| 桌面显示名 | 飞鱼极简版 |
-| 构建产物 | `build/fy-min.apk` |
+| 模块包名 | `cc.liujiale.wxpad` |
+| 桌面显示名 | 微信平板模式（极简版） |
+| Xposed API | libxposed API 102（`io.github.libxposed.api`） |
+| 作用域 | `com.tencent.mm`，由模块固定 |
+| 构建产物 | `build/wxpad.apk` |
 | 依赖 | 无第三方运行时依赖 |
 | 许可 | Apache-2.0；图标素材除外，见 [NOTICE.md](NOTICE.md) |
 
@@ -16,12 +18,13 @@
 
 ## 安装与启用
 
-1. 按下方说明构建 APK，并安装 `build/fy-min.apk`。
-2. 在 LSPosed 或 Vector 中启用本模块。微信会由 `xposedscope` 自动预选。
-3. 停用原版「飞鱼」，避免两个模块同时 Hook 同一逻辑。
-4. 强制停止微信，再重新打开。
+1. 按下方说明构建 APK，并安装 `build/wxpad.apk`。
+2. 在支持 libxposed API 102 的框架里启用本模块，例如 Vector 或新版 LSPosed。模块列表会把它显示为 `API 102`。
+3. 微信会被自动勾选，作用域由模块固定为 `com.tencent.mm`，无需手动添加。
+4. 停用原版「飞鱼」，避免两个模块同时 Hook 同一逻辑。
+5. 强制停止微信，再重新打开。
 
-框架只在启用或重新启用模块时读取 `xposedscope`。如果微信没有被预选，请停用后重新启用模块。
+框架只会在启用或重新启用模块时读取作用域。如果微信没有被勾上，请停用后重新启用模块。
 
 ## 构建
 
@@ -31,13 +34,13 @@
 bash build.sh
 ```
 
-APK 输出到 `build/fy-min.apk`。`api-src/` 中的 Xposed API 桩只用于编译，不会打包进 APK。
+APK 输出到 `build/wxpad.apk`。`api-src/` 中的 libxposed API 桩只用于编译，不会打包进 APK。
 
 ## 自动适配与限制
 
 模块扫描微信 APK 中的 DEX 字符串，查找目标方法，再用反射检查方法签名。它不依赖固定的微信类名，并会缓存扫描结果。
 
-自动适配不代表支持所有版本。目前已在微信 8.0.79（versionCode 3200）上验证。微信更新后，如果相关字符串或方法签名改变，模块可能无法生效。可在 LSPosed 日志中查找 `kind N not hooked` 或 `scan found 0 target(s)`。
+自动适配不代表支持所有版本。目前已在微信 8.0.79（versionCode 3200）上验证。微信更新后，如果相关字符串或方法签名改变，模块可能无法生效。可在框架日志中按 tag `wxpad` 查找 `kind N not hooked` 或 `scan found 0 target(s)`。
 
 模块只对微信包名 `com.tencent.mm` 生效。微信仍会按原流程发送平板登录校验请求；本模块不单独发起网络请求。
 

@@ -1,4 +1,4 @@
-package com.sky.ant.min;
+package cc.liujiale.wxpad;
 
 /**
  * 一个待 hook 的目标：类名 + 方法名 + 语义种类。

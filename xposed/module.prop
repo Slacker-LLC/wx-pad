@@ -1,0 +1,8 @@
+# libxposed 模块配置。框架用 Properties.load 解析，键名区分大小写。
+# 真正决定行为的只有 targetApiVersion：>= 101 时框架按现代模块处理，
+# 去读 META-INF/xposed/java_init.list 与 scope.list。
+# minApiVersion 框架不读，但规范要求填写。
+minApiVersion=101
+targetApiVersion=102
+# 作用域由 scope.list 固定，不开放给用户在框架里增删。
+staticScope=true
